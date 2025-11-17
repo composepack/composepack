@@ -38,6 +38,7 @@ func CreateChart(opts Options) error {
 		filepath.Join(path, "templates", "helpers"),
 		filepath.Join(path, "files"),
 		filepath.Join(path, "files", "config"),
+		filepath.Join(path, "templates", "files", "config"),
 	}
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
