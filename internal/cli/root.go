@@ -36,6 +36,7 @@ func NewRootCommand(application *app.Application) *cobra.Command {
 		NewPSCommand(application),
 		NewVersionCommand(),
 		NewInitCommand(),
+		NewPackageCommand(application),
 	)
 
 	return cmd

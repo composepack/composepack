@@ -20,7 +20,7 @@ const (
 
 // Loader describes chart loading behavior regardless of source (dir, archive, registry).
 type Loader interface {
-	Load(ctx context.Context, source string) (*Chart, error)
+    Load(ctx context.Context, source string) (*Chart, error)
 }
 
 // LoaderFunc allows simple function-based implementations of Loader.
