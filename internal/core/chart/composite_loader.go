@@ -67,7 +67,11 @@ func (l *CompositeLoader) loadArchive(ctx context.Context, source string) (*Char
 	if err := extractArchive(source, tmpDir); err != nil {
 		return nil, err
 	}
-	return l.fs.Load(ctx, tmpDir)
+	root, err := findChartRoot(tmpDir)
+	if err != nil {
+		return nil, err
+	}
+	return l.fs.Load(ctx, root)
 }
 
 func looksLikeArchive(path string) bool {
@@ -144,4 +148,35 @@ func shouldSkipArchiveEntry(name string) bool {
 		return true
 	}
 	return false
+}
+
+func findChartRoot(base string) (string, error) {
+	var chartDir string
+	err := filepath.WalkDir(base, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, relErr := filepath.Rel(base, path)
+		if relErr != nil {
+			return relErr
+		}
+		if rel == "." {
+			rel = ""
+		}
+		if d.IsDir() && shouldSkipArchiveEntry(rel) {
+			return filepath.SkipDir
+		}
+		if !d.IsDir() && strings.EqualFold(d.Name(), MetadataFile) {
+			chartDir = filepath.Dir(path)
+			return io.EOF
+		}
+		return nil
+	})
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	if chartDir == "" {
+		return "", fmt.Errorf("chart archive missing %s", MetadataFile)
+	}
+	return chartDir, nil
 }
