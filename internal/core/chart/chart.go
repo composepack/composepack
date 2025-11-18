@@ -20,7 +20,7 @@ const (
 
 // Loader describes chart loading behavior regardless of source (dir, archive, registry).
 type Loader interface {
-    Load(ctx context.Context, source string) (*Chart, error)
+	Load(ctx context.Context, source string) (*Chart, error)
 }
 
 // LoaderFunc allows simple function-based implementations of Loader.
@@ -33,9 +33,10 @@ func (f LoaderFunc) Load(ctx context.Context, source string) (*Chart, error) {
 
 // ChartMetadata mirrors Helm-style metadata fields.
 type ChartMetadata struct {
-	Name        string `yaml:"name"`
-	Version     string `yaml:"version"`
-	Description string `yaml:"description,omitempty"`
+	Name        string   `yaml:"name"`
+	Version     string   `yaml:"version"`
+	Description string   `yaml:"description,omitempty"`
+	Maintainers []string `yaml:"maintainers,omitempty"`
 }
 
 // Chart captures a fully loaded chart from disk/archive.
