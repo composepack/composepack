@@ -62,7 +62,8 @@ func NewRuntime(cfg config.Config, logger logging.Logger, loader chart.Loader) *
 
 // NewDefaultChartLoader constructs the default filesystem chart loader.
 func NewDefaultChartLoader() chart.Loader {
-	return chart.NewFileSystemChartLoader(fileloader.NewFileSystemLoader())
+	fs := chart.NewFileSystemChartLoader(fileloader.NewFileSystemLoader())
+	return chart.NewCompositeLoader(fs)
 }
 
 // Application provides methods that implement workflows such as install/up/down.

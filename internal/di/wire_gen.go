@@ -22,7 +22,8 @@ func InitializeApplication() (*app.Application, error) {
 	logger := provideLogger()
 	fileSystemLoader := fileloader.NewFileSystemLoader()
 	fileSystemChartLoader := chart.NewFileSystemChartLoader(fileSystemLoader)
-	runtime := app.NewRuntime(config, logger, fileSystemChartLoader)
+	compositeLoader := chart.NewCompositeLoader(fileSystemChartLoader)
+	runtime := app.NewRuntime(config, logger, compositeLoader)
 	application := app.NewApplication(runtime)
 	return application, nil
 }

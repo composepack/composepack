@@ -10,5 +10,6 @@ import (
 var ProviderSet = wire.NewSet(
 	fileloader.NewFileSystemLoader,
 	NewFileSystemChartLoader,
-	wire.Bind(new(Loader), new(*FileSystemChartLoader)),
+	NewCompositeLoader,
+	wire.Bind(new(Loader), new(*CompositeLoader)),
 )

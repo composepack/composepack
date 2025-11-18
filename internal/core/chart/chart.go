@@ -33,9 +33,10 @@ func (f LoaderFunc) Load(ctx context.Context, source string) (*Chart, error) {
 
 // ChartMetadata mirrors Helm-style metadata fields.
 type ChartMetadata struct {
-	Name        string `yaml:"name"`
-	Version     string `yaml:"version"`
-	Description string `yaml:"description,omitempty"`
+	Name        string   `yaml:"name"`
+	Version     string   `yaml:"version"`
+	Description string   `yaml:"description,omitempty"`
+	Maintainers []string `yaml:"maintainers,omitempty"`
 }
 
 // Chart captures a fully loaded chart from disk/archive.

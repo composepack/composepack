@@ -75,6 +75,21 @@ make build   # go build ./...
 
 See [`docs/PRD.md`](docs/PRD.md) for full details on chart layout, helper functions, and runtime expectations.
 
+To package the chart for distribution, run:
+
+```bash
+composepack package charts/example --destination dist
+# creates dist/example-0.1.0.cpack.tgz
+```
+
+You can optionally provide `--output mychart.cpack.tgz` or `--force` to overwrite existing archives.
+
+You can also manually create a `.cpack.tgz` (or `.tgz/.tar.gz`) archive if needed:
+
+```bash
+tar -czf example.cpack.tgz -C charts/example .
+```
+
 ## Quick start
 
 1. **Prepare a chart** following the structure in [`PRD.md`](docs/PRD.md) (`Chart.yaml`, `templates/`, `files/`, etc.).
@@ -97,7 +112,7 @@ See [`docs/PRD.md`](docs/PRD.md) for full details on chart layout, helper functi
    composepack version
    ```
 
-All runtime files live under `.cpack-releases/<release>/`. You can `cd` into that directory and run `docker compose` manually if needed.
+All runtime files live under `.cpack-releases/<release>/`. You can `cd` into that directory and run `docker compose` manually if needed. `composepack install` accepts either a chart directory or a packaged archive (`.cpack`, `.tgz`, `.tar.gz`, or even an HTTPS/HTTP URL pointing to one), so customers can run `composepack package`, upload the archive somewhere, and their users can do `composepack install https://example.com/mychart.cpack.tgz --name prod --auto-start`.
 
 ## Runtime layout (for reference)
 
