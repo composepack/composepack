@@ -1,0 +1,56 @@
+<svg width="780" height="320" viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .node { fill: #0b1120; stroke: #1f2937; stroke-width: 1.5; }
+      .node-title {
+        font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        font-size: 13px; fill: #e5e7eb; font-weight: 600; text-anchor: middle;
+      }
+      .node-sub {
+        font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        font-size: 11px; fill: #9ca3af; text-anchor: middle;
+      }
+      .arrow { stroke: #38bdf8; stroke-width: 2; stroke-linecap: round; }
+      .label {
+        font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        font-size: 12px; fill: #9ca3af; text-anchor: middle;
+      }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#38bdf8"/>
+    </marker>
+  </defs>
+
+  <!-- Chart (top left) -->
+  <rect class="node" x="50" y="60" width="190" height="85" rx="14"/>
+  <text class="node-title" x="145" y="90">Chart definition</text>
+  <text class="node-sub" x="145" y="110">templates + static assets</text>
+  <text class="node-sub" x="145" y="126">Chart metadata &amp; defaults</text>
+
+  <!-- Values (bottom left) -->
+  <rect class="node" x="50" y="180" width="190" height="85" rx="14"/>
+  <text class="node-title" x="145" y="210">Values &amp; overrides</text>
+  <text class="node-sub" x="145" y="230">values.yaml + user inputs</text>
+  <text class="node-sub" x="145" y="246">-f / --set / env layers</text>
+
+  <!-- Arrows from both boxes to ComposePack -->
+  <line class="arrow" x1="245" y1="100" x2="320" y2="120" marker-end="url(#arrowhead)"/>
+  <line class="arrow" x1="245" y1="220" x2="320" y2="200" marker-end="url(#arrowhead)"/>
+
+  <!-- ComposePack -->
+  <rect class="node" x="320" y="90" width="190" height="110" rx="14"/>
+  <text class="node-title" x="415" y="120">ComposePack</text>
+  <text class="node-sub" x="415" y="140">render templates</text>
+  <text class="node-sub" x="415" y="156">merge compose fragments</text>
+  <text class="node-sub" x="415" y="172">build release directory</text>
+
+  <!-- Arrow to release -->
+  <line class="arrow" x1="510" y1="145" x2="580" y2="145" marker-end="url(#arrowhead)"/>
+
+  <!-- Release runtime -->
+  <rect class="node" x="580" y="90" width="190" height="110" rx="14"/>
+  <text class="node-title" x="675" y="120">Release runtime</text>
+  <text class="node-sub" x="675" y="140">merged compose file</text>
+  <text class="node-sub" x="675" y="156">rendered assets + metadata</text>
+  <text class="label" x="675" y="178">docker compose up</text>
+</svg>
