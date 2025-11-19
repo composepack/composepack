@@ -7,7 +7,7 @@
 
 <p align="center">
   <!-- TODO: Replace with a real banner -->
-  <img src="docs/images/banner-simple.svg" width="1000" alt="ComposePack banner" />
+  <img src="docs/images/banner.svg" width="1000" alt="ComposePack banner" />
 </p>
 
 <p align="center">

@@ -6,7 +6,7 @@
 > 把 Helm 式的配置和打包体验带到 Docker Compose 上。
 
 <p align="center">
-  <img src="docs/images/banner-simple.svg" width="1000" alt="ComposePack banner" />
+  <img src="docs/images/banner.svg" width="1000" alt="ComposePack banner" />
 </p>
 
 <p align="center">
