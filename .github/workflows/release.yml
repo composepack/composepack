@@ -146,13 +146,13 @@ jobs:
             gh api -X PUT -H "Accept: application/vnd.github+json" \
               "/repos/${TAP_REPO}/contents/Formula/composepack.rb" \
               -f message="composepack ${VERSION}: update formula" \
-              -f content@=/tmp/content.b64 \
+              -f content="$(cat /tmp/content.b64)" \
               -f branch="${DEFAULT_BRANCH}" \
               -f sha="${SHA}"
           else
             gh api -X PUT -H "Accept: application/vnd.github+json" \
               "/repos/${TAP_REPO}/contents/Formula/composepack.rb" \
               -f message="composepack ${VERSION}: add formula" \
-              -f content@=/tmp/content.b64 \
+              -f content="$(cat /tmp/content.b64)" \
               -f branch="${DEFAULT_BRANCH}"
           fi
