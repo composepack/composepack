@@ -5,7 +5,7 @@ Param(
 )
 
 if (-not $Repo -or $Repo -eq "") {
-    $Repo = "GareArc/composepack"
+    $Repo = "composepack/composepack"
 }
 
 if ($Version -eq "latest") {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="${COMPOSEPACK_REPO:-GareArc/composepack}"
+REPO="${COMPOSEPACK_REPO:-composepack/composepack}"
 VERSION="${1:-latest}"
 if [[ -n "${COMPOSEPACK_INSTALL_DIR:-}" ]]; then
   INSTALL_DIR="$COMPOSEPACK_INSTALL_DIR"
@@ -73,13 +73,14 @@ case "$ARCH" in
     ;;
 esac
 
-ASSET="composepack-${OS}-${ARCH}"
-URL="https://github.com/${REPO}/releases/download/${VERSION}/${ASSET}"
+TARBALL="composepack_${VERSION}_${OS}_${ARCH}.tar.gz"
+URL="https://github.com/${REPO}/releases/download/${VERSION}/${TARBALL}"
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-curl -fSL "$URL" -o "$TMP_DIR/composepack"
+curl -fSL "$URL" -o "$TMP_DIR/$TARBALL"
+tar -C "$TMP_DIR" -xzf "$TMP_DIR/$TARBALL"
 chmod +x "$TMP_DIR/composepack"
 mkdir -p "$INSTALL_DIR"
 install -m 0755 "$TMP_DIR/composepack" "$INSTALL_DIR/composepack"

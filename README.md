@@ -12,17 +12,17 @@
 
 <p align="center">
   <!-- Badges -->
-  <a href="https://github.com/GareArc/composepack/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/GareArc/composepack/ci.yml?label=CI" alt="CI Status">
+  <a href="https://github.com/composepack/composepack/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/composepack/composepack/ci.yml?label=CI" alt="CI Status">
   </a>
-  <a href="https://github.com/GareArc/composepack/releases">
-    <img src="https://img.shields.io/github/v/release/GareArc/composepack?display_name=tag&sort=semver" alt="Latest Release">
+  <a href="https://github.com/composepack/composepack/releases">
+    <img src="https://img.shields.io/github/v/release/composepack/composepack?display_name=tag&sort=semver" alt="Latest Release">
   </a>
-  <a href="https://github.com/GareArc/composepack/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/GareArc/composepack" alt="License">
+  <a href="https://github.com/composepack/composepack/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/composepack/composepack" alt="License">
   </a>
-  <a href="https://github.com/GareArc/composepack/stargazers">
-    <img src="https://img.shields.io/github/stars/GareArc/composepack?style=social" alt="GitHub stars">
+  <a href="https://github.com/composepack/composepack/stargazers">
+    <img src="https://img.shields.io/github/stars/composepack/composepack?style=social" alt="GitHub stars">
   </a>
 </p>
 
@@ -90,10 +90,27 @@ That’s it: templated config + reproducible runtime on top of plain Docker Comp
 
 > ComposePack is a single binary with no external dependencies other than Docker & Docker Compose.
 
-### macOS / Linux
+### Homebrew (macOS)
+
+- If you’ve tapped `composepack/tap` already:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GareArc/composepack/main/scripts/install.sh | bash
+brew install composepack
+```
+
+- First time using the tap:
+
+```bash
+brew tap composepack/tap
+brew install composepack
+```
+
+Note: once accepted to homebrew-core, `brew install composepack` will work without a tap.
+
+### macOS / Linux (curl)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/composepack/composepack/main/scripts/install.sh | bash
 ```
 
 * Installs to `/usr/local/bin/composepack` or falls back to `~/.local/bin/composepack`
@@ -120,7 +137,7 @@ Uninstall:
 ### Build from source
 
 ```bash
-git clone https://github.com/GareArc/composepack.git
+git clone https://github.com/composepack/composepack.git
 cd composepack
 make build
 ```

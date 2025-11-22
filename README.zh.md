@@ -10,17 +10,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/GareArc/composepack/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/GareArc/composepack/ci.yml?label=CI" alt="CI Status">
+  <a href="https://github.com/composepack/composepack/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/composepack/composepack/ci.yml?label=CI" alt="CI Status">
   </a>
-  <a href="https://github.com/GareArc/composepack/releases">
-    <img src="https://img.shields.io/github/v/release/GareArc/composepack?display_name=tag&sort=semver" alt="Latest Release">
+  <a href="https://github.com/composepack/composepack/releases">
+    <img src="https://img.shields.io/github/v/release/composepack/composepack?display_name=tag&sort=semver" alt="Latest Release">
   </a>
-  <a href="https://github.com/GareArc/composepack/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/GareArc/composepack" alt="License">
+  <a href="https://github.com/composepack/composepack/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/composepack/composepack" alt="License">
   </a>
-  <a href="https://github.com/GareArc/composepack/stargazers">
-    <img src="https://img.shields.io/github/stars/GareArc/composepack?style=social" alt="GitHub stars">
+  <a href="https://github.com/composepack/composepack/stargazers">
+    <img src="https://img.shields.io/github/stars/composepack/composepack?style=social" alt="GitHub stars">
   </a>
 </p>
 
@@ -116,7 +116,7 @@ composepack logs myapp --follow
 ### macOS / Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GareArc/composepack/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/composepack/composepack/main/scripts/install.sh | bash
 ```
 
 - 默认安装到 `/usr/local/bin/composepack`，无权限时会落到 `~/.local/bin/composepack`
@@ -143,7 +143,7 @@ curl -fsSL https://raw.githubusercontent.com/GareArc/composepack/main/scripts/in
 ### 从源码构建
 
 ```bash
-git clone https://github.com/GareArc/composepack.git
+git clone https://github.com/composepack/composepack.git
 cd composepack
 make build
 ```
