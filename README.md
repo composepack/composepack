@@ -90,7 +90,7 @@ That’s it: templated config + reproducible runtime on top of plain Docker Comp
 
 > ComposePack is a single binary with no external dependencies other than Docker & Docker Compose.
 
-### Homebrew (macOS)
+### Homebrew (macOS/Linux)
 
 * If you’ve tapped `composepack/tap` already:
 
@@ -105,7 +105,7 @@ brew tap composepack/tap
 brew install composepack
 ```
 
-Note: once accepted to homebrew-core, `brew install composepack` will work without a tap.
+Note: once accepted to homebrew-core, `brew install composepack` will work without a tap on macOS and Linux.
 
 ### macOS / Linux (curl)
 

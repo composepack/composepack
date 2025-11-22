@@ -118,10 +118,24 @@ jobs:
           SHA_ARM64=$(sha256sum "$ARM64_TARBALL" | awk '{print $1}')
           echo "sha_darwin_amd64=$SHA_AMD64" >> "$GITHUB_OUTPUT"
           echo "sha_darwin_arm64=$SHA_ARM64" >> "$GITHUB_OUTPUT"
+      - name: Compute Linux checksums
+        id: shas_linux
+        run: |
+          set -euo pipefail
+          AMD64_TARBALL=$(ls artifacts/**/composepack_${VERSION}_linux_amd64.tar.gz)
+          ARM64_TARBALL=$(ls artifacts/**/composepack_${VERSION}_linux_arm64.tar.gz)
+          echo "linux amd64: $AMD64_TARBALL"
+          echo "linux arm64: $ARM64_TARBALL"
+          SHA_AMD64=$(sha256sum "$AMD64_TARBALL" | awk '{print $1}')
+          SHA_ARM64=$(sha256sum "$ARM64_TARBALL" | awk '{print $1}')
+          echo "sha_linux_amd64=$SHA_AMD64" >> "$GITHUB_OUTPUT"
+          echo "sha_linux_arm64=$SHA_ARM64" >> "$GITHUB_OUTPUT"
       - name: Generate Homebrew formula
         run: |
           mkdir -p out
-          bash scripts/gen-brew-formula.sh "$VERSION" "$REPO_SLUG" out/composepack.rb "${{ steps.shas.outputs.sha_darwin_amd64 }}" "${{ steps.shas.outputs.sha_darwin_arm64 }}"
+          bash scripts/gen-brew-formula.sh "$VERSION" "$REPO_SLUG" out/composepack.rb \
+            "${{ steps.shas.outputs.sha_darwin_amd64 }}" "${{ steps.shas.outputs.sha_darwin_arm64 }}" \
+            "${{ steps.shas_linux.outputs.sha_linux_amd64 }}" "${{ steps.shas_linux.outputs.sha_linux_arm64 }}"
           echo "Generated formula:"
           cat out/composepack.rb
       - name: Upsert formula in tap via API
