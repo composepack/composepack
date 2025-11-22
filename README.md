@@ -92,13 +92,13 @@ That’s it: templated config + reproducible runtime on top of plain Docker Comp
 
 ### Homebrew (macOS)
 
-- If you’ve tapped `composepack/tap` already:
+* If you’ve tapped `composepack/tap` already:
 
 ```bash
 brew install composepack
 ```
 
-- First time using the tap:
+* First time using the tap:
 
 ```bash
 brew tap composepack/tap
