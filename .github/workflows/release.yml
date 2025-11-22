@@ -75,8 +75,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - name: Display contents
-        run: ls -R artifacts
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -126,28 +124,35 @@ jobs:
           bash scripts/gen-brew-formula.sh "$VERSION" "$REPO_SLUG" out/composepack.rb "${{ steps.shas.outputs.sha_darwin_amd64 }}" "${{ steps.shas.outputs.sha_darwin_arm64 }}"
           echo "Generated formula:"
           cat out/composepack.rb
-      - name: Push to tap repository
+      - name: Upsert formula in tap via API
         if: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ steps.taprepo.outputs.tap }}
-          token: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN }}
-          path: tap
-      - name: Update formula in tap
-        if: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        env:
+          GH_TOKEN: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          mkdir -p tap/Formula
-          cp out/composepack.rb tap/Formula/composepack.rb
-          cd tap
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/composepack.rb
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
-          git commit -m "composepack ${VERSION}: update formula"
+          gh --version
           TAP_REPO="${{ steps.taprepo.outputs.tap }}"
-          BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          git push "https://x-access-token:${HOMEBREW_TAP_GITHUB_TOKEN}@github.com/${TAP_REPO}.git" "HEAD:${BRANCH}"
+          DEFAULT_BRANCH=$(gh repo view "$TAP_REPO" --json defaultBranchRef -q .defaultBranchRef.name || echo "main")
+          echo "Using branch: $DEFAULT_BRANCH"
+          mkdir -p Formula
+          cp out/composepack.rb Formula/composepack.rb
+          # Get existing file SHA if present
+          SHA=$(gh api -X GET -H "Accept: application/vnd.github+json" \
+                 "/repos/${TAP_REPO}/contents/Formula/composepack.rb?ref=${DEFAULT_BRANCH}" -q .sha 2>/dev/null || echo "")
+          # Base64 encode content
+          if base64 -w 0 Formula/composepack.rb >/tmp/content.b64 2>/dev/null; then :; else base64 < Formula/composepack.rb | tr -d '\n' >/tmp/content.b64; fi
+          # Build request
+          if [[ -n "$SHA" && "$SHA" != "null" ]]; then
+            gh api -X PUT -H "Accept: application/vnd.github+json" \
+              "/repos/${TAP_REPO}/contents/Formula/composepack.rb" \
+              -f message="composepack ${VERSION}: update formula" \
+              -f content@=/tmp/content.b64 \
+              -f branch="${DEFAULT_BRANCH}" \
+              -f sha="${SHA}"
+          else
+            gh api -X PUT -H "Accept: application/vnd.github+json" \
+              "/repos/${TAP_REPO}/contents/Formula/composepack.rb" \
+              -f message="composepack ${VERSION}: add formula" \
+              -f content@=/tmp/content.b64 \
+              -f branch="${DEFAULT_BRANCH}"
+          fi
