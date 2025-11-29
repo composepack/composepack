@@ -48,6 +48,7 @@ It brings a **modern templating engine**, **overridable config system**, and a *
 | **Config Model**          |   ❌ (Flat .env)    | **✅ (Values.yaml)**  |
 | **Packaging**             |         ❌          |    **✅ (Charts)**    |
 | **Environment Isolation** |         ❌          | **✅ (Release Dirs)** |
+| **Drift Detection**       |         ❌          | **✅ (Diff command)** |
 | **Runtime Engine**        |         ✅          |        **✅**         |
 
 ---
@@ -256,6 +257,7 @@ composepack down myapp --volumes
 composepack logs myapp --follow
 composepack ps myapp
 composepack template myapp
+composepack diff myapp --chart <chart-source>
 ```
 
 All runtime files for this release live in:
@@ -275,6 +277,40 @@ Want to run these commands from somewhere else? Pass `--runtime-dir` to point di
 composepack up myapp --runtime-dir /opt/releases/myapp
 composepack logs myapp --runtime-dir /opt/releases/myapp --follow
 ```
+
+#### 3️⃣ Preview changes before deploying (Drift Detection)
+
+Before running `install` or `up`, you can see what would change:
+
+```bash
+# If release exists, chart source is auto-resolved
+composepack diff myapp
+
+# Or compare against a different chart
+composepack diff myapp --chart charts/myapp-v2
+```
+
+This shows:
+
+* What services would be added, removed, or modified
+* Changes to the docker-compose.yaml configuration
+* File differences (with `--show-files`)
+
+Example output:
+
+```
+📝 Docker Compose Changes:
+
+-     image: myapp:v1.0
++     image: myapp:v2.0
+
+⚠️  Affected Services:
+  • myapp-api (modified)
+```
+
+**Note:** In the examples above, `myapp` is the **release name** (the name you gave to your deployment). The chart source is auto-resolved from the release metadata, so you typically don't need to specify `--chart` unless comparing against a different chart.
+
+This helps you answer: **"Will running install now restart my database?"**
 
 ---
 
@@ -542,6 +578,27 @@ No. ComposePack **wraps** Docker Compose, it doesn’t replace it.
 * Docker Compose handles: actually running the containers
 
 You can always `cd` into `.cpack-releases/<name>/` and run `docker compose` manually if you prefer.
+
+### What's the difference between chart name, release name, and chart source?
+
+ComposePack uses three different types of names:
+
+* **Chart Name** - The name of the chart package (from `Chart.yaml`). Example: `example`
+* **Release Name** - The name you give to a deployment instance (via `--name` flag). Example: `myapp`, `prod`, `staging`
+* **Chart Source** - The path/URL where the chart is located. Example: `charts/example`, `app.cpack.tgz`
+
+**In practice:**
+* When you run `composepack install charts/example --name myapp`:
+  * `charts/example` = chart source (where the chart is)
+  * `example` = chart name (from Chart.yaml)
+  * `myapp` = release name (what you call this deployment)
+* After installation, you use the **release name** in commands:
+  * `composepack up myapp` (not `composepack up example`)
+  * `composepack diff myapp` (chart source is auto-resolved)
+
+You can deploy the same chart multiple times with different release names (e.g., `prod`, `staging`, `dev`).
+
+See [docs/naming.md](docs/naming.md) for detailed explanation.
 
 ### Why not just use raw docker-compose and .env files?
 

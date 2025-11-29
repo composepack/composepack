@@ -127,6 +127,13 @@ type PSOptions struct {
 	RuntimePath    string
 }
 
+// DiffOptions control drift detection between current and proposed state.
+type DiffOptions struct {
+	RenderOptions
+	ShowFiles    bool
+	ContextLines int
+}
+
 // InstallRelease implements the install workflow described in the PRD.
 func (a *Application) InstallRelease(ctx context.Context, opts InstallOptions) error {
 	runtimeDir, _, err := a.renderRelease(ctx, opts.RenderOptions)
@@ -218,6 +225,94 @@ func (a *Application) ShowStatus(ctx context.Context, opts PSOptions) error {
 	})
 }
 
+// DiffRelease compares the current release with what would be deployed.
+// If no release exists, it shows what would be created.
+func (a *Application) DiffRelease(ctx context.Context, opts DiffOptions) error {
+	// Determine chart source - use provided one, or try to infer from existing release
+	chartSource := opts.ChartSource
+
+	// Load the existing release (if it exists)
+	_, currentRuntimeDir, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
+	if err != nil {
+		return err
+	}
+
+	// Load current release metadata (may be nil if release doesn't exist)
+	currentMeta, err := a.Runtime.ReleaseStore.Load(ctx, currentRuntimeDir)
+	if err != nil {
+		return fmt.Errorf("load current release metadata: %w", err)
+	}
+
+	// Auto-resolve chart source: use provided one, or infer from existing release
+	if chartSource == "" {
+		if currentMeta == nil {
+			return fmt.Errorf("--chart is required (release %s doesn't exist yet; specify chart to see what would be created)", opts.ReleaseName)
+		}
+		if currentMeta.ChartSource == "" {
+			return fmt.Errorf("release %s exists but chart source is unknown (provide --chart to compare)", opts.ReleaseName)
+		}
+		// Auto-resolve from existing release metadata
+		chartSource = currentMeta.ChartSource
+	}
+
+	// Render the proposed new release in memory (don't write to disk)
+	ch, err := a.Runtime.ChartLoader.Load(ctx, chartSource)
+	if err != nil {
+		return fmt.Errorf("load chart: %w", err)
+	}
+
+	mergedValues, _, err := a.buildValues(ch, opts.RenderOptions)
+	if err != nil {
+		return err
+	}
+
+	rc := templating.RenderContext{
+		Values: mergedValues,
+		Env:    captureEnv(),
+		Release: templating.ReleaseInfo{
+			Name: opts.ReleaseName,
+		},
+		Chart: ch.Metadata,
+		Files: templating.NewFilesAccessor(ch.StaticFiles),
+	}
+
+	newComposeFragments, err := a.Runtime.TemplateEngine.RenderComposeFragments(ctx, ch, rc)
+	if err != nil {
+		return fmt.Errorf("render new compose templates: %w", err)
+	}
+
+	newFileAssets, err := a.Runtime.TemplateEngine.RenderFiles(ctx, ch, rc)
+	if err != nil {
+		return fmt.Errorf("render new file templates: %w", err)
+	}
+
+	newMergedCompose, _, err := a.mergeFragments(ctx, newComposeFragments, newFileAssets, opts.ReleaseName)
+	if err != nil {
+		return err
+	}
+
+	// If no existing release, show what would be created
+	if currentMeta == nil {
+		return a.showDiff(nil, newMergedCompose, nil, newFileAssets, opts)
+	}
+
+	// Load current compose file
+	currentComposePath := filepath.Join(currentRuntimeDir, "docker-compose.yaml")
+	currentCompose, err := os.ReadFile(currentComposePath)
+	if err != nil {
+		return fmt.Errorf("read current compose file: %w", err)
+	}
+
+	// Load current files
+	currentFiles, err := a.loadCurrentFiles(currentRuntimeDir)
+	if err != nil {
+		return fmt.Errorf("load current files: %w", err)
+	}
+
+	// Perform the diff
+	return a.showDiff(currentCompose, newMergedCompose, currentFiles, newFileAssets, opts)
+}
+
 func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (string, *release.Metadata, error) {
 	if opts.ReleaseName == "" {
 		return "", nil, errors.New("release name is required")
@@ -282,6 +377,7 @@ func (a *Application) renderRelease(ctx context.Context, opts RenderOptions) (st
 	meta := &release.Metadata{
 		ReleaseName:   opts.ReleaseName,
 		ChartMetadata: ch.Metadata,
+		ChartSource:   opts.ChartSource,
 		Values:        deepCopyMap(mergedValues),
 		ValuesSources: valueSources,
 		ComposeFiles:  orderedFragments,
@@ -504,4 +600,323 @@ func captureEnv() map[string]string {
 		out[parts[0]] = parts[1]
 	}
 	return out
+}
+
+func (a *Application) loadCurrentFiles(runtimeDir string) (map[string][]byte, error) {
+	filesDir := filepath.Join(runtimeDir, "files")
+	files := make(map[string][]byte)
+
+	// Check if files directory exists
+	if _, err := os.Stat(filesDir); os.IsNotExist(err) {
+		return files, nil
+	}
+
+	err := filepath.Walk(filesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(filesDir, path)
+		if err != nil {
+			return err
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read file %s: %w", relPath, err)
+		}
+
+		files[relPath] = data
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
+func (a *Application) showDiff(currentCompose, newCompose []byte, currentFiles, newFiles map[string][]byte, opts DiffOptions) error {
+	// Import the differ package inline to use it
+	return showDiffOutput(currentCompose, newCompose, currentFiles, newFiles, opts.ShowFiles, opts.ContextLines)
+}
+
+func showDiffOutput(currentCompose, newCompose []byte, currentFiles, newFiles map[string][]byte, showFiles bool, contextLines int) error {
+	// Handle case where no existing release (everything is new)
+	if currentCompose == nil {
+		fmt.Println("📝 New Release - What would be created:")
+		fmt.Println()
+		fmt.Println("Docker Compose Configuration:")
+		fmt.Println(string(newCompose))
+		fmt.Println()
+
+		// Extract services that would be created
+		affected := extractAffectedServices(nil, newCompose)
+		if len(affected) > 0 {
+			fmt.Println("🚀 Services that would be created:")
+			for _, svc := range affected {
+				fmt.Printf("  • %s\n", svc)
+			}
+			fmt.Println()
+		}
+
+		// Show files that would be created
+		if len(newFiles) > 0 {
+			fmt.Println("📁 Files that would be created:")
+			for path := range newFiles {
+				fmt.Printf("  + %s\n", path)
+			}
+			fmt.Println()
+		}
+
+		if showFiles && len(newFiles) > 0 {
+			fmt.Println("📄 File Contents:")
+			for path, data := range newFiles {
+				fmt.Printf("\n--- %s\n", path)
+				fmt.Println(string(data))
+			}
+		}
+
+		return nil
+	}
+
+	// Compare compose files using string diff
+	currentStr := string(currentCompose)
+	newStr := string(newCompose)
+
+	hasComposeChanges := currentStr != newStr
+
+	if !hasComposeChanges {
+		fmt.Println("✓ No changes detected in docker-compose.yaml")
+	} else {
+		fmt.Println("📝 Docker Compose Changes:")
+		fmt.Println()
+
+		// Show a simple unified diff
+		currentLines := strings.Split(currentStr, "\n")
+		newLines := strings.Split(newStr, "\n")
+
+		// Simple line-by-line comparison
+		maxLen := len(currentLines)
+		if len(newLines) > maxLen {
+			maxLen = len(newLines)
+		}
+
+		for i := 0; i < maxLen; i++ {
+			var currentLine, newLine string
+			if i < len(currentLines) {
+				currentLine = currentLines[i]
+			}
+			if i < len(newLines) {
+				newLine = newLines[i]
+			}
+
+			if currentLine != newLine {
+				if currentLine != "" {
+					fmt.Printf("- %s\n", currentLine)
+				}
+				if newLine != "" {
+					fmt.Printf("+ %s\n", newLine)
+				}
+			}
+		}
+		fmt.Println()
+
+		// Extract affected services
+		affected := extractAffectedServices(currentCompose, newCompose)
+		if len(affected) > 0 {
+			fmt.Println("⚠️  Affected Services:")
+			for _, svc := range affected {
+				fmt.Printf("  • %s\n", svc)
+			}
+			fmt.Println()
+		}
+	}
+
+	// Compare files
+	added := []string{}
+	modified := []string{}
+	removed := []string{}
+
+	if currentFiles == nil {
+		// No existing files - everything is new
+		for path := range newFiles {
+			added = append(added, path)
+		}
+	} else {
+		for path, newData := range newFiles {
+			oldData, exists := currentFiles[path]
+			if !exists {
+				added = append(added, path)
+			} else if string(oldData) != string(newData) {
+				modified = append(modified, path)
+			}
+		}
+
+		for path := range currentFiles {
+			if _, exists := newFiles[path]; !exists {
+				removed = append(removed, path)
+			}
+		}
+	}
+
+	hasFileChanges := len(added) > 0 || len(modified) > 0 || len(removed) > 0
+
+	if !hasFileChanges {
+		if showFiles {
+			fmt.Println("✓ No changes detected in files/")
+		}
+		return nil
+	}
+
+	fmt.Println("📁 File Changes:")
+	if len(added) > 0 {
+		fmt.Println("  Added:")
+		for _, f := range added {
+			fmt.Printf("    + %s\n", f)
+		}
+	}
+	if len(removed) > 0 {
+		fmt.Println("  Removed:")
+		for _, f := range removed {
+			fmt.Printf("    - %s\n", f)
+		}
+	}
+	if len(modified) > 0 {
+		fmt.Println("  Modified:")
+		for _, f := range modified {
+			fmt.Printf("    ~ %s\n", f)
+		}
+	}
+	fmt.Println()
+
+	if showFiles && len(modified) > 0 {
+		fmt.Println("📄 Detailed File Diffs:")
+		for _, filename := range modified {
+			fmt.Printf("\n--- a/%s\n", filename)
+			fmt.Printf("+++ b/%s\n", filename)
+
+			oldLines := strings.Split(string(currentFiles[filename]), "\n")
+			newLines := strings.Split(string(newFiles[filename]), "\n")
+
+			maxLen := len(oldLines)
+			if len(newLines) > maxLen {
+				maxLen = len(newLines)
+			}
+
+			for i := 0; i < maxLen; i++ {
+				var oldLine, newLine string
+				if i < len(oldLines) {
+					oldLine = oldLines[i]
+				}
+				if i < len(newLines) {
+					newLine = newLines[i]
+				}
+
+				if oldLine != newLine {
+					if oldLine != "" {
+						fmt.Printf("- %s\n", oldLine)
+					}
+					if newLine != "" {
+						fmt.Printf("+ %s\n", newLine)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func extractAffectedServices(oldYAML, newYAML []byte) []string {
+	var affected []string
+
+	var oldServices map[string]bool
+	if oldYAML == nil {
+		oldServices = make(map[string]bool)
+	} else {
+		oldServices = extractServiceNames(oldYAML)
+	}
+
+	newServices := extractServiceNames(newYAML)
+
+	// Services that exist in new but not old (added)
+	for svc := range newServices {
+		if !oldServices[svc] {
+			affected = append(affected, svc)
+		}
+	}
+
+	// Services that exist in old but not new (removed)
+	for svc := range oldServices {
+		if !newServices[svc] {
+			affected = append(affected, fmt.Sprintf("%s (removed)", svc))
+		}
+	}
+
+	// Services that exist in both - check if they changed
+	for svc := range newServices {
+		if oldServices[svc] {
+			oldSvcData := extractServiceData(oldYAML, svc)
+			newSvcData := extractServiceData(newYAML, svc)
+			if oldSvcData != newSvcData {
+				affected = append(affected, fmt.Sprintf("%s (modified)", svc))
+			}
+		}
+	}
+
+	return affected
+}
+
+func extractServiceNames(composeYAML []byte) map[string]bool {
+	services := make(map[string]bool)
+
+	if composeYAML == nil {
+		return services
+	}
+
+	var doc map[string]any
+	if err := yaml.Unmarshal(composeYAML, &doc); err != nil {
+		return services
+	}
+
+	if svcs, ok := doc["services"].(map[string]any); ok {
+		for name := range svcs {
+			services[name] = true
+		}
+	}
+
+	return services
+}
+
+func extractServiceData(composeYAML []byte, serviceName string) string {
+	if composeYAML == nil {
+		return ""
+	}
+
+	var doc map[string]any
+	if err := yaml.Unmarshal(composeYAML, &doc); err != nil {
+		return ""
+	}
+
+	svcs, ok := doc["services"].(map[string]any)
+	if !ok {
+		return ""
+	}
+
+	svcData, ok := svcs[serviceName]
+	if !ok {
+		return ""
+	}
+
+	data, err := yaml.Marshal(svcData)
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(string(data))
 }

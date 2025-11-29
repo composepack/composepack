@@ -20,6 +20,7 @@ const metadataFileName = "release.json"
 type Metadata struct {
 	ReleaseName   string              `json:"releaseName"`
 	ChartMetadata chart.ChartMetadata `json:"chartMetadata"`
+	ChartSource   string              `json:"chartSource,omitempty"`
 	ChartDigest   string              `json:"chartDigest"`
 	RuntimePath   string              `json:"runtimePath"`
 	CreatedAt     time.Time           `json:"createdAt"`
