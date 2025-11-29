@@ -108,6 +108,37 @@ brew install composepack
 
 Note: once accepted to homebrew-core, `brew install composepack` will work without a tap on macOS and Linux.
 
+### Docker Image (CI/CD)
+
+For use in GitHub Actions, GitLab CI, or other containerized environments:
+
+```bash
+# Use the official image
+docker run --rm garearc/composepack:latest --version
+
+# Or pin to a specific version
+docker run --rm garearc/composepack:v1.0.0 --version
+```
+
+**Example GitHub Actions workflow:**
+
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and run composepack
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            garearc/composepack:latest \
+            install charts/myapp --name prod
+```
+
+The image is multi-arch (supports `linux/amd64` and `linux/arm64`) and is automatically published to Docker Hub on every release.
+
 ### macOS / Linux (curl)
 
 ```bash
