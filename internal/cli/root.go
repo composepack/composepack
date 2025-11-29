@@ -34,6 +34,7 @@ func NewRootCommand(application *app.Application) *cobra.Command {
 		NewDownCommand(application),
 		NewLogsCommand(application),
 		NewPSCommand(application),
+		NewDiffCommand(application),
 		NewVersionCommand(),
 		NewInitCommand(),
 		NewPackageCommand(application),

@@ -3,3 +3,4 @@ example/
 dist/
 release/
 .DS_Store
+composepack
