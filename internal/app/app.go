@@ -205,10 +205,26 @@ func (a *Application) StreamLogs(ctx context.Context, opts LogsOptions) error {
 		args = append(args, "--tail", fmt.Sprintf("%d", opts.Tail))
 	}
 
-	return a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
+	if opts.Follow {
+		// For follow mode, stream directly without capturing
+		return a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
+			WorkingDir: runtimeDir,
+			Args:       args,
+		})
+	}
+
+	// For non-follow mode, capture and print output
+	output, err := a.Runtime.DockerRunner.RunWithOutput(ctx, dockercompose.CommandOptions{
 		WorkingDir: runtimeDir,
 		Args:       args,
 	})
+	if err != nil {
+		return err
+	}
+	if len(output) > 0 {
+		fmt.Print(string(output))
+	}
+	return nil
 }
 
 // ShowStatus surfaces docker compose ps data.
@@ -219,10 +235,17 @@ func (a *Application) ShowStatus(ctx context.Context, opts PSOptions) error {
 	}
 
 	args := []string{"ps"}
-	return a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
+	output, err := a.Runtime.DockerRunner.RunWithOutput(ctx, dockercompose.CommandOptions{
 		WorkingDir: runtimeDir,
 		Args:       args,
 	})
+	if err != nil {
+		return err
+	}
+	if len(output) > 0 {
+		fmt.Print(string(output))
+	}
+	return nil
 }
 
 // DiffRelease compares the current release with what would be deployed.

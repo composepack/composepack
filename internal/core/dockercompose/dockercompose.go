@@ -82,6 +82,22 @@ func (r *Runner) Run(ctx context.Context, opts CommandOptions) error {
 	return nil
 }
 
+// RunWithOutput executes docker compose commands and returns stdout.
+func (r *Runner) RunWithOutput(ctx context.Context, opts CommandOptions) ([]byte, error) {
+	if opts.WorkingDir == "" {
+		return nil, errors.New("working directory is required")
+	}
+	if len(opts.Args) == 0 {
+		return nil, errors.New("docker compose arguments are required")
+	}
+
+	stdout, stderr, err := r.run(ctx, opts.WorkingDir, opts.Args, "")
+	if err != nil {
+		return nil, composeError("docker compose", err, stderr)
+	}
+	return stdout, nil
+}
+
 func (r *Runner) run(ctx context.Context, dir string, args []string, project string) ([]byte, []byte, error) {
 	stdout, stderr, err := r.exec.Run(ctx, process.Command{
 		Name: r.primary[0],
