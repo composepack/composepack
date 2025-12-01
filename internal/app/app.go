@@ -135,8 +135,72 @@ type DiffOptions struct {
 }
 
 // InstallRelease implements the install workflow described in the PRD.
+// It only works for new releases and will error if the release already exists.
 func (a *Application) InstallRelease(ctx context.Context, opts InstallOptions) error {
-	runtimeDir, _, err := a.renderRelease(ctx, opts.RenderOptions)
+	// Check if release already exists
+	_, runtimeDir, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
+	if err != nil {
+		return err
+	}
+
+	existingMeta, err := a.Runtime.ReleaseStore.Load(ctx, runtimeDir)
+	if err != nil {
+		return fmt.Errorf("check existing release: %w", err)
+	}
+	if existingMeta != nil {
+		return fmt.Errorf("release %s already exists (use 'composepack apply' to update an existing release)", opts.ReleaseName)
+	}
+
+	// Render and install the release
+	runtimeDir, _, err = a.renderRelease(ctx, opts.RenderOptions)
+	if err != nil {
+		return err
+	}
+	if !opts.AutoStart {
+		return nil
+	}
+	args := []string{"up", "-d"}
+	return a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
+		WorkingDir: runtimeDir,
+		Args:       args,
+	})
+}
+
+// ApplyOptions drives chart application/update into an existing or new runtime directory.
+type ApplyOptions struct {
+	RenderOptions
+	AutoStart bool
+}
+
+// ApplyRelease implements the apply workflow (like Helm upgrade).
+// It runs docker compose down first if the release exists, then installs/updates.
+func (a *Application) ApplyRelease(ctx context.Context, opts ApplyOptions) error {
+	// Check if release exists
+	_, runtimeDir, err := a.resolveRuntimeLocation(opts.ReleaseName, opts.RuntimeBaseDir, opts.RuntimePath)
+	if err != nil {
+		return err
+	}
+
+	existingMeta, err := a.Runtime.ReleaseStore.Load(ctx, runtimeDir)
+	if err != nil {
+		return fmt.Errorf("check existing release: %w", err)
+	}
+
+	// If release exists, run docker compose down first
+	if existingMeta != nil {
+		// Check if docker-compose.yaml exists (release might be partially created)
+		composePath := filepath.Join(runtimeDir, "docker-compose.yaml")
+		if _, err := os.Stat(composePath); err == nil {
+			// Run docker compose down (ignore errors if containers aren't running)
+			_ = a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
+				WorkingDir: runtimeDir,
+				Args:       []string{"down"},
+			})
+		}
+	}
+
+	// Render and install the release
+	runtimeDir, _, err = a.renderRelease(ctx, opts.RenderOptions)
 	if err != nil {
 		return err
 	}

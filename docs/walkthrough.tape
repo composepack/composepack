@@ -1,4 +1,4 @@
-Output walkthrough.gif
+Output docs/walkthrough.gif
 
 Set FontSize 24
 Set Width 1200
@@ -13,7 +13,7 @@ Enter
 Sleep 500ms
 Type "composepack install charts/webapp --name app --auto-start"
 Enter
-Sleep 3s
+Sleep 8s
 Type "composepack ps app"
 Enter
 Sleep 3s
@@ -29,12 +29,12 @@ Sleep 500ms
 Type "cat values-prod.yaml"
 Enter
 Sleep 2s
-Type "composepack install charts/webapp --name app -f values-prod.yaml --auto-start"
+Type "composepack apply charts/webapp --name app -f values-prod.yaml --auto-start"
 Enter
 Sleep 10s
 Type "composepack ps app"
 Enter
-Sleep 4s
+Sleep 5s
 Ctrl+L
 Sleep 300ms
 
@@ -46,7 +46,7 @@ Enter
 Sleep 1s
 Type "ls -lh dist/"
 Enter
-Sleep 1s
+Sleep 3s
 Ctrl+L
 Sleep 300ms
 
@@ -56,13 +56,12 @@ Sleep 500ms
 Type "cat values-staging.yaml"
 Enter
 Sleep 2s
-Type "composepack install dist/webapp-1.0.0.cpack.tgz --name app -f values-staging.yaml --auto-start"
+Type "composepack apply dist/webapp-1.0.0.cpack.tgz --name app -f values-staging.yaml --auto-start"
 Enter
-Sleep 5s
+Sleep 10s
 Type "composepack ps app"
 Enter
-Sleep 1s
-Sleep 2s
+Sleep 5s
 Ctrl+L
 Sleep 2s
 

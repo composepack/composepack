@@ -29,6 +29,7 @@ func NewRootCommand(application *app.Application) *cobra.Command {
 
 	cmd.AddCommand(
 		NewInstallCommand(application),
+		NewApplyCommand(application),
 		NewTemplateCommand(application),
 		NewUpCommand(application),
 		NewDownCommand(application),
