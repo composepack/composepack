@@ -135,7 +135,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${VERSION}-amd64
+            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}-amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -147,11 +147,13 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${VERSION}-arm64
+            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}-arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Create and push multi-arch manifests
+        env:
+          VERSION: ${{ env.VERSION }}
         run: |
           # Create manifest for version tag
           docker buildx imagetools create -t ${{ env.IMAGE_NAME }}:${VERSION} \
