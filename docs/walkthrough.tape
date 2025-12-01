@@ -14,65 +14,56 @@ Enter
 Sleep 1s
 Type "composepack install charts/webapp --name app --auto-start"
 Enter
-Sleep 8s
+Sleep 5s
 Type "composepack ps app"
 Enter
-Sleep 2s
-Type "composepack logs app"
-Enter
-Sleep 2s
+Sleep 1s
 Type "cat charts/webapp/values.yaml"
 Enter
-Sleep 3s
+Sleep 1.5s
 Ctrl+L
-Sleep 500ms
+Sleep 300ms
 
 Type "# Update to production (with DB, 3 workers)"
 Enter
 Sleep 500ms
 Type "cat values-prod.yaml"
 Enter
-Sleep 2s
+Sleep 1s
 Type "composepack install charts/webapp --name app -f values-prod.yaml --auto-start"
 Enter
-Sleep 8s
+Sleep 5s
 Type "composepack ps app"
 Enter
-Sleep 2s
-Type "composepack logs app"
-Enter
-Sleep 2s
+Sleep 1s
 Ctrl+L
-Sleep 500ms
+Sleep 300ms
 
 Type "# Package chart for distribution"
 Enter
 Sleep 500ms
 Type "composepack package charts/webapp --destination dist/"
 Enter
-Sleep 2s
+Sleep 1s
 Type "ls -lh dist/"
 Enter
-Sleep 2s
+Sleep 1s
 Ctrl+L
-Sleep 500ms
+Sleep 300ms
 
 Type "# Update from packaged chart (staging: DB, 2 workers)"
 Enter
 Sleep 500ms
 Type "cat values-staging.yaml"
 Enter
-Sleep 2s
+Sleep 1s
 Type "composepack install dist/webapp-1.0.0.cpack.tgz --name app -f values-staging.yaml --auto-start"
 Enter
-Sleep 8s
+Sleep 5s
 Type "composepack ps app"
 Enter
+Sleep 1s
 Sleep 2s
-Type "composepack logs app"
-Enter
-Sleep 2s
-Sleep 5s
 Ctrl+L
-Sleep 5s
+Sleep 2s
 
