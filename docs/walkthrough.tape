@@ -1,26 +1,25 @@
 Output walkthrough.gif
 
-Set FontSize 20
+Set FontSize 24
 Set Width 1200
 Set Height 800
 Set TypingSpeed 50ms
-Set Theme "Catppuccin Latte"
 
 Type "# Install from chart (dev: no DB, 1 worker)"
 Enter
 Sleep 500ms
 Type "cd demo"
 Enter
-Sleep 1s
+Sleep 500ms
 Type "composepack install charts/webapp --name app --auto-start"
 Enter
-Sleep 5s
+Sleep 3s
 Type "composepack ps app"
 Enter
-Sleep 1s
+Sleep 3s
 Type "cat charts/webapp/values.yaml"
 Enter
-Sleep 1.5s
+Sleep 2s
 Ctrl+L
 Sleep 300ms
 
@@ -29,13 +28,13 @@ Enter
 Sleep 500ms
 Type "cat values-prod.yaml"
 Enter
-Sleep 1s
+Sleep 2s
 Type "composepack install charts/webapp --name app -f values-prod.yaml --auto-start"
 Enter
-Sleep 5s
+Sleep 10s
 Type "composepack ps app"
 Enter
-Sleep 1s
+Sleep 4s
 Ctrl+L
 Sleep 300ms
 
@@ -56,7 +55,7 @@ Enter
 Sleep 500ms
 Type "cat values-staging.yaml"
 Enter
-Sleep 1s
+Sleep 2s
 Type "composepack install dist/webapp-1.0.0.cpack.tgz --name app -f values-staging.yaml --auto-start"
 Enter
 Sleep 5s
