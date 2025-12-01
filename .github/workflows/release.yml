@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  IMAGE_NAME: garearc/composepack
+  IMAGE_NAME: garethcxy/composepack
 
 jobs:
   build:
