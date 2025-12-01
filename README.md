@@ -72,6 +72,10 @@ It brings a **modern templating engine**, **overridable config system**, and a *
 
 ## ⚡ Quick 60-Second Demo
 
+<p align="center">
+  <img src="docs/walkthrough.gif" width="1200" alt="ComposePack walkthrough demo" />
+</p>
+
 ```bash
 # 1. Scaffold a chart
 composepack init charts/demo --name demo --version 0.1.0
