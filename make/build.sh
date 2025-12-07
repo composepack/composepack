@@ -4,4 +4,4 @@ set -euo pipefail
 root_dir=$(cd -- "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root_dir"
 
-go build ./...
+go build -o out/composepack ./cmd/composepack
