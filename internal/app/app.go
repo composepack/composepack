@@ -192,6 +192,7 @@ func (a *Application) ApplyRelease(ctx context.Context, opts ApplyOptions) error
 		composePath := filepath.Join(runtimeDir, "docker-compose.yaml")
 		if _, err := os.Stat(composePath); err == nil {
 			// Run docker compose down (ignore errors if containers aren't running)
+			a.Runtime.Logger.Info("Running docker compose down for existing release...", "release", opts.ReleaseName)
 			_ = a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
 				WorkingDir: runtimeDir,
 				Args:       []string{"down"},
@@ -208,6 +209,7 @@ func (a *Application) ApplyRelease(ctx context.Context, opts ApplyOptions) error
 		return nil
 	}
 	args := []string{"up", "-d"}
+	a.Runtime.Logger.Info("Running docker compose up for new release...", "release", opts.ReleaseName)
 	return a.Runtime.DockerRunner.Run(ctx, dockercompose.CommandOptions{
 		WorkingDir: runtimeDir,
 		Args:       args,

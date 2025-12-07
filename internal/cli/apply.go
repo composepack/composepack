@@ -60,8 +60,7 @@ func NewApplyCommand(application *app.Application) *cobra.Command {
 	cmd.Flags().StringVar(&releaseName, "name", "", "release name to use for the installation")
 	cmd.Flags().StringArrayVarP(&valueFiles, "values", "f", nil, "values files to include (can specify multiple)")
 	cmd.Flags().StringArrayVar(&setValues, "set", nil, "direct value overrides (key=value)")
-	cmd.Flags().BoolVar(&autoStart, "auto-start", false, "run docker compose up after installation")
+	cmd.Flags().BoolVar(&autoStart, "auto-start", true, "run docker compose up after installation")
 
 	return cmd
 }
-
